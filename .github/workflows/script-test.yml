@@ -1,9 +1,30 @@
+# name: generate-ascii
+# on:
+#   push
+
+# jobs:
+#   ascii_job:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Repo
+#         uses: actions/checkout@v4
+
+#       - name: List Repo Files
+#         run: ls -ltra
+
+#       - name: Executing Shell Script
+#         run: |
+#           chmod +x ascii-script.sh
+#           ./ascii-script.sh
+#           pip install streamlit
+#           chmod +x streamlit-test.py
+#           streamlit run streamlit-test.py
 name: generate-ascii
 on:
   push
 
 jobs:
-  ascii_job:
+  ascii_job_2:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -16,6 +37,14 @@ jobs:
         run: |
           chmod +x ascii-script.sh
           ./ascii-script.sh
-          pip install streamlit
-          chmod +x streamlit-test.py
-          streamlit run streamlit-test.py
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Streamlit
+        run: pip install streamlit
+
+      - name: Run Streamlit Script (Headless)
+        run: streamlit run streamlit-test.py --server.headless true --server.port 8501
