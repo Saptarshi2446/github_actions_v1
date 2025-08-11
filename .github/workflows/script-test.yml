@@ -16,3 +16,6 @@ jobs:
         run: |
           chmod +x ascii-script.sh
           ./ascii-script.sh
+          pip install streamlit
+          chmod +x streamlit-test.py
+          streamlit run streamlit-test.py
