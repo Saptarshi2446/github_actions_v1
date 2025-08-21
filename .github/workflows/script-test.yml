@@ -21,7 +21,8 @@
 #           streamlit run streamlit-test.py
 name: generate-ascii
 on:
-  push
+  workflow_dispatch:
+
 
 jobs:
   ascii_job_2:
@@ -46,5 +47,5 @@ jobs:
       - name: Install Streamlit
         run: pip install streamlit
 
-      - name: Run Streamlit Script (Headless)
-        run: streamlit run streamlit-test.py --server.headless true --server.port 8501
+      # - name: Run Streamlit Script (Headless)
+      #   run: streamlit run streamlit-test.py --server.headless true --server.port 8501
