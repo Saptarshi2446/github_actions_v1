@@ -21,7 +21,7 @@
 #           streamlit run streamlit-test.py
 name: generate-ascii
 on:
-  workflow_dispatch:
+  workflow_dispatch
 
 
 jobs:
