@@ -21,11 +21,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-app:latest .
+          sudo docker build -t ${{ secrets.DOCKER_USERNAME }}/web-app:latest .
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/web-app:latest
+          sudo docker push ${{ secrets.DOCKER_USERNAME }}/web-app:latest
 
   deploy:
     runs-on: self-hosted
