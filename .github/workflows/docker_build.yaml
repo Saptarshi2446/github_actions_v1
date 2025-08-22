@@ -34,11 +34,12 @@ jobs:
     steps:
       - name: Pull image on self-hosted runner
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/dino-game:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/dino-game:latest
 
       - name: Run the container
         run: |
-          docker run --rm -it \
+            sudo docker run --rm -it \
             --env DISPLAY=$DISPLAY \
             -v /tmp/.X11-unix:/tmp/.X11-unix \
             ${{ secrets.DOCKER_USERNAME }}/dino-game:latest
+
