@@ -25,7 +25,7 @@ jobs:
 
       - name: Push Docker image
         run: |
-          sudo docker push saptarshi2446/web-app:latest
+          sudo docker push ${{ secrets.DOCKER_USERNAME }}/web-app:latest
 
   deploy:
     runs-on: self-hosted
