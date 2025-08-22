@@ -1,4 +1,4 @@
-name: Build and Deploy Dino Game
+name: Build and Deploy Web App
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repo
@@ -21,11 +21,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/dino-game:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-app:latest .
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/dino-game:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/web-app:latest
 
   deploy:
     runs-on: self-hosted
@@ -34,12 +34,9 @@ jobs:
     steps:
       - name: Pull image on self-hosted runner
         run: |
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/dino-game:latest
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/web-app:latest
 
       - name: Run the container
         run: |
-            sudo docker run --rm -it \
-            --env DISPLAY=$DISPLAY \
-            -v /tmp/.X11-unix:/tmp/.X11-unix \
-            ${{ secrets.DOCKER_USERNAME }}/dino-game:latest
-
+          sudo docker run -d -p 5000:5000 \
+            ${{ secrets.DOCKER_USERNAME }}/web-app:latest
