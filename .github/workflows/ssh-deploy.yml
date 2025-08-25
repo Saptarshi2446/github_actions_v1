@@ -30,19 +30,36 @@ jobs:
             host=$(echo "$host" | xargs)
             pem_file=$(echo "$pem_file" | xargs)
 
-            echo "🔑 Copying PEM file for $host"
-            chmod 600 pem_files/$pem_file || echo "⚠️ chmod failed for $pem_file"
+            echo "---------------------------"
+            echo "Processing: HOST=$host  PEM=$pem_file"
+            echo "---------------------------"
 
-            echo "📦 Copying project files to $host..."
-            rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/ \
-                || echo "❌ Rsync failed for $host"
+            if [ ! -f "pem_files/$pem_file" ]; then
+                echo "❌ ERROR: PEM file not found for $host (pem_files/$pem_file)"
+                continue   # skip this host but continue with others
+            fi
+
+            chmod 600 "pem_files/$pem_file" || {
+                echo "⚠️ chmod failed for $pem_file"
+                continue
+            }
+
+            echo "📦 Rsync to $host..."
+            if ! rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/; then
+                echo "❌ Rsync failed for $host"
+                continue
+            fi
 
             echo "🚀 Starting Flask app on $host..."
-            ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &" \
-                || echo "❌ SSH failed for $host"
+            if ! ssh -i "pem_files/$pem_file" -o StrictHostKeyChecking=no ubuntu@"$host" \
+                "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"; then
+                echo "❌ SSH failed for $host"
+                continue
+            fi
 
-            echo "✅ Finished processing $host"
+            echo "✅ Done with $host"
             done
+
 
 
     #   - name: Deploy to servers
