@@ -22,24 +22,46 @@ jobs:
         run: pip install -r requirements.txt
       - name: Fix line endings in hosts.txt
         run: sed -i 's/\r$//' hosts.txt
-
       - name: Deploy to servers
         run: |
-            # Remove CRLF if present (in case CSV came from Windows)
             sed -i 's/\r$//' hosts.csv
 
             tail -n +2 hosts.csv | while IFS=, read -r host pem_file; do
+            host=$(echo "$host" | xargs)
+            pem_file=$(echo "$pem_file" | xargs)
+
             echo "🔑 Copying PEM file for $host"
-            chmod 600 pem_files/$pem_file
+            chmod 600 pem_files/$pem_file || echo "⚠️ chmod failed for $pem_file"
 
             echo "📦 Copying project files to $host..."
-            rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/
+            rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/ \
+                || echo "❌ Rsync failed for $host"
 
             echo "🚀 Starting Flask app on $host..."
-            ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"
+            ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &" \
+                || echo "❌ SSH failed for $host"
 
-            echo "✅ Flask started on http://$host:5000"
+            echo "✅ Finished processing $host"
             done
+
+
+    #   - name: Deploy to servers
+    #     run: |
+    #         # Remove CRLF if present (in case CSV came from Windows)
+    #         sed -i 's/\r$//' hosts.csv
+
+    #         tail -n +2 hosts.csv | while IFS=, read -r host pem_file; do
+    #         echo "🔑 Copying PEM file for $host"
+    #         chmod 600 pem_files/$pem_file
+
+    #         echo "📦 Copying project files to $host..."
+    #         rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/
+
+    #         echo "🚀 Starting Flask app on $host..."
+    #         ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"
+
+    #         echo "✅ Flask started on http://$host:5000"
+    #         done
 
     #   - name: Deploy to servers
     #     run: |
