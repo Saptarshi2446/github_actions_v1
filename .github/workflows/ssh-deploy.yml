@@ -20,7 +20,8 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
-
+      - name: Fix line endings in hosts.txt
+        run: sed -i 's/\r$//' hosts.txt
       - name: Deploy to servers
         run: |
           while IFS=" " read -r host pem_file; do
