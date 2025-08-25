@@ -24,6 +24,7 @@ jobs:
         run: sed -i 's/\r$//' hosts.txt
       - name: Deploy to servers
         run: |
+            sed -i 's/\r$//' hosts.csv
             while IFS="," read -r host pem_file; do
             [[ "$host" == "host" ]] && continue   # skip CSV header
 
