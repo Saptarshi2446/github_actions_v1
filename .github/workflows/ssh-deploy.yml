@@ -1,0 +1,50 @@
+name: Deploy Flask App to EC2
+
+on:
+  workflow_dispatch:   # Manual trigger
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install SSH client
+        run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+      - name: Deploy Flask App to EC2
+        run: |
+          while read -r host pemfile; do
+            echo "🔑 Using $pemfile for $host"
+            chmod 600 pem_files/$pemfile
+
+            # Copy Flask app + requirements
+            scp -o StrictHostKeyChecking=no -i pem_files/$pemfile src/zbx.py requirements.txt ubuntu@$host:/home/ubuntu/
+
+            # Install dependencies & run app
+            ssh -o StrictHostKeyChecking=no -i pem_files/$pemfile ubuntu@$host <<'EOF'
+              set -e
+              if grep -qi "ID=" /etc/os-release; then
+                echo "✅ Linux detected on $(hostname)"
+              fi
+
+              # Install Python + pip if missing
+              sudo apt-get update
+              sudo apt-get install -y python3 python3-pip
+
+              # Install Flask
+              pip3 install -r requirements.txt
+
+              # Kill old Flask (if running)
+              pkill -f "python3 zbx.py" || true
+
+              # Run Flask in background on port 5000
+              nohup python3 zbx.py > flask.log 2>&1 &
+              echo "🚀 Flask started on http://$host:5000"
+            EOF
+
+                    done < host.txt
