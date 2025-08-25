@@ -24,33 +24,35 @@ jobs:
         run: sed -i 's/\r$//' hosts.txt
       - name: Deploy to servers
         run: |
-            sed -i 's/\r$//' hosts.csv
-
-
-            tail -n +2 hosts.csv | while IFS=, read -r host pem_file; do
-            host=$(echo "$host" | xargs)
-            pem_file=$(echo "$pem_file" | xargs)
+            while IFS="," read -r host pem_file; do
+            [[ "$host" == "host" ]] && continue   # skip CSV header
 
             echo "---------------------------"
             echo "Processing: HOST=$host  PEM=$pem_file"
             echo "---------------------------"
 
-            # Check if PEM file exists
-            if [ ! -f "pem_files/$pem_file" ]; then
-                echo "❌ ERROR: PEM file not found for $host (pem_files/$pem_file)"
-                continue   # move to next host instead of failing whole script
+            # Ensure correct permissions
+            chmod 600 "pem_files/$pem_file" 2>/dev/null || true
+
+            # Rsync with error handling
+            if rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/; then
+                echo "📦 Rsync to $host succeeded."
+            else
+                echo "❌ Rsync failed for $host"
+                continue   # go to next host instead of stopping
             fi
 
-            echo "📦 Rsync to $host..."
-            rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/ \
-                || { echo "❌ Rsync failed for $host"; continue; }
-
-            echo "🚀 Starting Flask app on $host..."
-            ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &" \
-                || { echo "❌ SSH failed for $host"; continue; }
+            # Start Flask app (won’t run if rsync failed)
+            if ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host \
+                "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"; then
+                echo "🚀 Flask started on $host"
+            else
+                echo "❌ Failed to start Flask on $host"
+            fi
 
             echo "✅ Done with $host"
-            done
+            done < hosts.csv
+
 
 
 
