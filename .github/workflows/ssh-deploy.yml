@@ -1,50 +1,89 @@
 name: Deploy Flask App to EC2
 
 on:
-  workflow_dispatch:   # Manual trigger
+  workflow_dispatch:
   push:
     branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      REMOTE_USER: ubuntu   # change if your EC2 user is different (e.g., ec2-user)
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install SSH client
-        run: sudo apt-get update && sudo apt-get install -y openssh-client
+      - name: Install SSH client and curl
+        run: sudo apt-get update -y && sudo apt-get install -y openssh-client curl
 
-      - name: Deploy Flask App to EC2
+      - name: Deploy Flask App to EC2s
+        shell: bash
         run: |
+          set -euo pipefail
+
+          if [ ! -f host.txt ]; then
+            echo "host.txt not found at repo root. Expected format: '<ip> <pemfile>' per line."
+            exit 1
+          fi
+
           while read -r host pemfile; do
-            echo "🔑 Using $pemfile for $host"
-            chmod 600 pem_files/$pemfile
+            # skip blank/comment lines
+            [ -z "${host:-}" ] && continue
+            [[ "${host}" =~ ^# ]] && continue
 
-            # Copy Flask app + requirements
-            scp -o StrictHostKeyChecking=no -i pem_files/$pemfile src/zbx.py requirements.txt ubuntu@$host:/home/ubuntu/
+            echo "🔑 Using key '${pemfile}' for host '${host}'"
 
-            # Install dependencies & run app
-            ssh -o StrictHostKeyChecking=no -i pem_files/$pemfile ubuntu@$host <<'EOF'
-              set -e
-              if grep -qi "ID=" /etc/os-release; then
-                echo "✅ Linux detected on $(hostname)"
-              fi
+            if [ ! -f "pem_files/${pemfile}" ]; then
+              echo "❌ Missing pem_files/${pemfile}"
+              exit 1
+            fi
 
-              # Install Python + pip if missing
-              sudo apt-get update
-              sudo apt-get install -y python3 python3-pip
+            chmod 600 "pem_files/${pemfile}"
 
-              # Install Flask
-              pip3 install -r requirements.txt
+            echo "📤 Copying app files to ${host}..."
+            scp -o StrictHostKeyChecking=no -i "pem_files/${pemfile}" \
+              src/zbx.py requirements.txt "${REMOTE_USER}@${host}:/home/${REMOTE_USER}/"
 
-              # Kill old Flask (if running)
-              pkill -f "python3 zbx.py" || true
+            echo "🔐 SSH into ${host} and (install deps, restart app)..."
+            ssh -o StrictHostKeyChecking=no -i "pem_files/${pemfile}" "${REMOTE_USER}@${host}" <<'EOF'
+            set -e
+            # Ensure Linux
+            if ! [ -f /etc/os-release ]; then
+            echo "❌ Not a Linux host. Skipping."
+            exit 0
+            fi
 
-              # Run Flask in background on port 5000
-              nohup python3 zbx.py > flask.log 2>&1 &
-              echo "🚀 Flask started on http://$host:5000"
+            # Install Python and pip
+            if ! command -v python3 >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y python3 python3-pip
+            else
+            sudo apt-get update -y
+            sudo apt-get install -y python3-pip
+            fi
+
+            # Install Flask deps (user site-packages)
+            pip3 install --user -r requirements.txt
+
+            # Kill old Flask (if any)
+            pkill -f "python3 zbx.py" || true
+
+            # Start Flask in background (port 5000)
+            nohup python3 zbx.py > flask.log 2>&1 &
             EOF
 
-                    done < host.txt
+            echo "🧪 Health check http://${host}:5000 ..."
+            # give it a moment to bind
+            sleep 4
+            if curl -fsS "http://${host}:5000" >/dev/null; then
+              echo "✅ ${host} OK"
+            else
+              echo "❌ ${host} FAILED health check"
+              exit 1
+            fi
+
+          done < host.txt
+
+
