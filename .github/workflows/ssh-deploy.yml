@@ -26,6 +26,7 @@ jobs:
         run: |
             sed -i 's/\r$//' hosts.csv
 
+
             tail -n +2 hosts.csv | while IFS=, read -r host pem_file; do
             host=$(echo "$host" | xargs)
             pem_file=$(echo "$pem_file" | xargs)
@@ -34,31 +35,23 @@ jobs:
             echo "Processing: HOST=$host  PEM=$pem_file"
             echo "---------------------------"
 
+            # Check if PEM file exists
             if [ ! -f "pem_files/$pem_file" ]; then
                 echo "❌ ERROR: PEM file not found for $host (pem_files/$pem_file)"
-                continue   # skip this host but continue with others
+                continue   # move to next host instead of failing whole script
             fi
-
-            chmod 600 "pem_files/$pem_file" || {
-                echo "⚠️ chmod failed for $pem_file"
-                continue
-            }
 
             echo "📦 Rsync to $host..."
-            if ! rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/; then
-                echo "❌ Rsync failed for $host"
-                continue
-            fi
+            rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/ \
+                || { echo "❌ Rsync failed for $host"; continue; }
 
             echo "🚀 Starting Flask app on $host..."
-            if ! ssh -i "pem_files/$pem_file" -o StrictHostKeyChecking=no ubuntu@"$host" \
-                "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"; then
-                echo "❌ SSH failed for $host"
-                continue
-            fi
+            ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &" \
+                || { echo "❌ SSH failed for $host"; continue; }
 
             echo "✅ Done with $host"
             done
+
 
 
 
