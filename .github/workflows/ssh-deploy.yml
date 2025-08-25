@@ -22,6 +22,25 @@ jobs:
         run: pip install -r requirements.txt
       - name: Fix line endings in hosts.txt
         run: sed -i 's/\r$//' hosts.txt
+
+      - name: Deploy to servers
+        run: |
+            # Remove CRLF if present (in case CSV came from Windows)
+            sed -i 's/\r$//' hosts.csv
+
+            tail -n +2 hosts.csv | while IFS=, read -r host pem_file; do
+            echo "🔑 Copying PEM file for $host"
+            chmod 600 pem_files/$pem_file
+
+            echo "📦 Copying project files to $host..."
+            rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/
+
+            echo "🚀 Starting Flask app on $host..."
+            ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"
+
+            echo "✅ Flask started on http://$host:5000"
+            done
+
     #   - name: Deploy to servers
     #     run: |
     #       while IFS=" " read -r host pem_file; do
@@ -36,44 +55,3 @@ jobs:
 
     #         echo "✅ Flask started on http://$host:5000"
     #       done < hosts.txt
-      - name: Deploy Flask App to EC2s
-        run: |
-          # Remove CRLF if present
-          sed -i 's/\r$//' hosts.csv
-
-          tail -n +2 hosts.csv | while IFS=, read -r host pem_file; do
-            [ -z "$host" ] && continue
-            echo "🔑 Copying PEM file for $host"
-
-            if [ ! -f "pem_files/$pem_file" ]; then
-              echo "❌ PEM file pem_files/$pem_file not found for $host"
-              continue
-            fi
-
-            chmod 600 pem_files/$pem_file
-
-            if ! scp -o StrictHostKeyChecking=no -i pem_files/$pem_file src/zbx.py requirements.txt ubuntu@$host:/home/ubuntu/; then
-              echo "❌ SCP failed for $host"
-              continue
-            fi
-
-            if ! ssh -o StrictHostKeyChecking=no -i pem_files/$pem_file ubuntu@$host << 'EOF'
-              set -e
-              if grep -qi "ID=" /etc/os-release; then
-                echo "✅ Linux detected on $(hostname)"
-              fi
-
-              sudo apt-get update -y
-              sudo apt-get install -y python3 python3-pip
-
-              pip3 install --user -r requirements.txt
-
-              pkill -f "python3 zbx.py" || true
-
-              nohup python3 zbx.py > flask.log 2>&1 &
-              echo "🚀 Flask started on http://$(hostname -I | awk '{print $1}'):5000"
-            EOF
-            then
-              echo "❌ SSH/Deploy failed for $host"
-            fi
-          done
