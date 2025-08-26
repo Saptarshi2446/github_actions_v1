@@ -22,37 +22,37 @@ jobs:
         run: pip install -r requirements.txt
       - name: Fix line endings in hosts.txt
         run: sed -i 's/\r$//' hosts.txt
-      - name: Deploy to servers
-        run: |
-            sed -i 's/\r$//' hosts.csv
-            while IFS="," read -r host pem_file; do
-            [[ "$host" == "host" ]] && continue   # skip CSV header
+      # - name: Deploy to servers
+      #   run: |
+      #       sed -i 's/\r$//' hosts.csv
+      #       while IFS="," read -r host pem_file; do
+      #       [[ "$host" == "host" ]] && continue   # skip CSV header
 
-            echo "---------------------------"
-            echo "Processing: HOST=$host  PEM=$pem_file"
-            echo "---------------------------"
+      #       echo "---------------------------"
+      #       echo "Processing: HOST=$host  PEM=$pem_file"
+      #       echo "---------------------------"
 
-            # Ensure correct permissions
-            chmod 600 "pem_files/$pem_file" 2>/dev/null || true
+      #       # Ensure correct permissions
+      #       chmod 600 "pem_files/$pem_file" 2>/dev/null || true
 
-            # Rsync with error handling
-            if rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/; then
-                echo "📦 Rsync to $host succeeded."
-            else
-                echo "❌ Rsync failed for $host"
-                continue   # go to next host instead of stopping
-            fi
+      #       # Rsync with error handling
+      #       if rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/; then
+      #           echo "📦 Rsync to $host succeeded."
+      #       else
+      #           echo "❌ Rsync failed for $host"
+      #           continue   # go to next host instead of stopping
+      #       fi
 
-            # Start Flask app (won’t run if rsync failed)
-            if ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host \
-                "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"; then
-                echo "🚀 Flask started on $host"
-            else
-                echo "❌ Failed to start Flask on $host"
-            fi
+      #       # Start Flask app (won’t run if rsync failed)
+      #       if ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host \
+      #           "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"; then
+      #           echo "🚀 Flask started on $host"
+      #       else
+      #           echo "❌ Failed to start Flask on $host"
+      #       fi
 
-            echo "✅ Done with $host"
-            done < hosts.csv
+      #       echo "✅ Done with $host"
+      #       done < hosts.csv
 
 
 
@@ -76,17 +76,17 @@ jobs:
     #         echo "✅ Flask started on http://$host:5000"
     #         done
 
-    #   - name: Deploy to servers
-    #     run: |
-    #       while IFS=" " read -r host pem_file; do
-    #         echo "🔑 Copying PEM file for $host"
-    #         chmod 600 pem_files/$pem_file
+      - name: Deploy to servers
+        run: |
+          while IFS=" " read -r host pem_file; do
+            echo "🔑 Copying PEM file for $host"
+            chmod 600 pem_files/$pem_file
 
-    #         echo "📦 Copying project files to $host..."
-    #         rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/
+            echo "📦 Copying project files to $host..."
+            rsync -avz -e "ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no" ./src/ ubuntu@$host:/home/ubuntu/app/
 
-    #         echo "🚀 Starting Flask app on $host..."
-    #         ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"
+            echo "🚀 Starting Flask app on $host..."
+            ssh -i pem_files/$pem_file -o StrictHostKeyChecking=no ubuntu@$host "cd /home/ubuntu/app && nohup python3 zbx.py > flask.log 2>&1 &"
 
-    #         echo "✅ Flask started on http://$host:5000"
-    #       done < hosts.txt
+            echo "✅ Flask started on http://$host:5000"
+          done < hosts.txt
