@@ -1,16 +1,19 @@
-FROM python:3.11-slim
+FROM node:16
 
-WORKDIR /app
+# Create app directory
+WORKDIR /usr/src/app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
 
-# Copy source
-COPY src/ /app/
+RUN npm install
+# If you are building your code for production
+# RUN npm ci --only=production
 
-# Expose port
-EXPOSE 5000
+# Bundle app source
+COPY . .
 
-# Run Flask app
-CMD ["python", "app.py"]
+EXPOSE 8080
+CMD [ "node", "server.js" ]
