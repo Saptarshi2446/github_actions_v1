@@ -19,3 +19,5 @@ jobs:
       run: sudo docker rm -f cicd-pipeline-container || true
     - name: Run Docker Container
       run: sudo docker run -d -p 8080:8080 --name cicd-pipeline-container saptarshi2446/cicd-pipeline
+    - name: Check Docker Container
+      run: sudo docker ps -a
