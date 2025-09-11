@@ -1,0 +1,28 @@
+name: Deploy Zabbix Agent
+
+on: push
+
+jobs:
+  first_job:
+    runs-on: self-hosted
+    steps:
+      - name: Set up Checkout
+        uses: actions/checkout@v4
+
+      - name: Welcome message
+        run: echo "My first Github Actions Job"
+
+      - name: List files
+        run: ls -l
+
+      - name: Read file
+        run: cat README.md
+
+      - name: Check directory
+        run: pwd
+
+      - name: Move File
+        run: cp deploy_agent.sh /home/ubuntu/
+
+      - name: Execute the Script
+        run: bash -x deploy_zabbix_agent.sh
