@@ -25,7 +25,7 @@ jobs:
         run: cp deploy_agent.sh /home/ubuntu/
 
       - name: Move Pem File
-        run: zbx_srv1.pem /home/ubuntu/        
+        run: cp zbx_srv1.pem /home/ubuntu/        
 
       - name: Execute the Script
         run: bash -x deploy_agent.sh
