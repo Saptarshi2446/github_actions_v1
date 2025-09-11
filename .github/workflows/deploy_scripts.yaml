@@ -3,7 +3,7 @@ name: Deploy Zabbix Agent
 on: push
 
 jobs:
-  first_job:
+  deploy_agent:
     runs-on: self-hosted
     steps:
       - name: Set up Checkout
@@ -25,4 +25,4 @@ jobs:
         run: cp deploy_agent.sh /home/ubuntu/
 
       - name: Execute the Script
-        run: bash -x deploy_zabbix_agent.sh
+        run: bash -x deploy_agent.sh
