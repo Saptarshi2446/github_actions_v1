@@ -21,11 +21,11 @@ jobs:
       - name: Check directory
         run: pwd
 
-      - name: Move File
-        run: cp deploy_agent.sh /home/ubuntu/
+    #   - name: Move File
+    #     run: cp deploy_agent.sh /home/ubuntu/
 
-      - name: Move Pem File
-        run: mv zbx_srv1.pem /home/ubuntu/zbx_srv1.pem       
+    #   - name: Move Pem File
+    #     run: mv zbx_srv1.pem /home/ubuntu/zbx_srv1.pem       
 
       - name: Execute the Script
         run: bash -x deploy_agent.sh
