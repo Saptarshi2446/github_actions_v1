@@ -15,9 +15,9 @@ SCRIPT_REMOTE="/home/ubuntu/zabbix_agent_add.sh"
 chmod 600 "$PEM_FILE"
 
 echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
-scp -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+sudo scp -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
 
 echo "🚀 Executing script on $REMOTE_USER@$REMOTE_IP ..."
-ssh -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+sudo ssh -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
 
 echo "✅ Deployment complete."
