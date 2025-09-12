@@ -22,12 +22,13 @@ sudo sed -i 's/^Server=.*/Server=3.15.199.235/' $CONF
 sudo sed -i 's/^ServerActive=.*/ServerActive=3.15.199.235/' $CONF
 sudo sed -i '/^Hostname=/s/^/#/' $CONF
 sudo sed -i 's/^ListenPort=.*/ListenPort=10050/' $CONF
-sudo sed -i '/^HostMetadata=/s/^/#/' $CONF
+sudo sed -i 's/^HostMetadata=.*/HostMetadata=linux_github_actions/' "$CONF"
 
-# Add HostMetadata if not already present
-if ! grep -q "^HostMetadata=linux" $CONF; then
-    echo "HostMetadata=linux_github_actions" | sudo tee -a $CONF
+# If no HostMetadata line exists, append it to the end
+if ! sudo grep -q '^HostMetadata=' "$CONF"; then
+  echo "HostMetadata=linux_github_actions" | sudo tee -a "$CONF" > /dev/null
 fi
+
 
 # Restart and enable service
 sudo systemctl enable zabbix-agent
