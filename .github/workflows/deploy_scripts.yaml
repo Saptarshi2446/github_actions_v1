@@ -28,4 +28,4 @@ jobs:
     #     run: mv zbx_srv1.pem /home/ubuntu/zbx_srv1.pem       
 
       - name: Execute the Script
-        run: bash -x deploy_agent.sh
+        run: bash -x deploy_zabbix_multi.sh
