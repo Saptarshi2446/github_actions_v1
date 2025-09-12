@@ -30,25 +30,36 @@
 #       - name: Execute the Script
 #         run: bash -x deploy_zabbix_multi.sh
 
-name: EC2 OS Checker
+name: EC2 Script Deploy and OS Check
 
 on: workflow_dispatch
 
 jobs:
-  check_os_release:
+  run_and_deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo (fetch PEM file)
+      - name: Checkout repo (fetch PEM and script)
         uses: actions/checkout@v3
 
-      - name: Make PEM file secure
+      - name: Secure PEM file
         run: chmod 600 zbx_srv1.pem
 
-      - name: Run cat /etc/os-release on all EC2 instances
+      - name: Run commands and deploy script on EC2
         env:
           REMOTE_IPS: ${{ secrets.REMOTE_IPS }}
+          PEM_FILE: zbx_srv1.pem
+          REMOTE_USER: ubuntu
+          SCRIPT_LOCAL: zabbix_agent_add.sh
+          SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
         run: |
-          for IP in $(echo "$REMOTE_IPS" | tr ',' '\n'); do
-            echo "--- $IP ---"
-            ssh -i zbx_srv1.pem -o StrictHostKeyChecking=no ubuntu@"$IP" "cat /etc/os-release"
+          for REMOTE_IP in $(echo "$REMOTE_IPS" | tr ',' '\n'); do
+            echo "--- $REMOTE_IP: OS Version ---"
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
+
+            echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
+            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+
+            echo "🚀 Executing script on $REMOTE_USER@$REMOTE_IP ..."
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
           done
+
