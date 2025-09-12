@@ -20,6 +20,8 @@ fi
 
 # Loop through IPs in file
 while read -r REMOTE_IP; do
+    REMOTE_IP=$(echo "$REMOTE_IP" | tr -d '\r' | xargs)   # strip CR and spaces
+
     # Skip blank lines and comments
     [[ -z "$REMOTE_IP" || "$REMOTE_IP" =~ ^# ]] && continue
 
@@ -32,5 +34,6 @@ while read -r REMOTE_IP; do
     echo "✅ Done with $REMOTE_IP"
     echo "---------------------------------------------"
 done < "$IP_FILE"
+
 
 echo "🎉 Deployment completed for all targets!"
