@@ -18,15 +18,15 @@ fi
 # Configure agentd.conf safely
 CONF="/etc/zabbix/zabbix_agentd.conf"
 
-sudo sed -i 's/^Server=.*/Server=127.0.0.1/' $CONF
-sudo sed -i 's/^ServerActive=.*/ServerActive=127.0.0.1/' $CONF
+sudo sed -i 's/^Server=.*/Server=3.15.199.235/' $CONF
+sudo sed -i 's/^ServerActive=.*/ServerActive=3.15.199.235/' $CONF
 sudo sed -i '/^Hostname=/s/^/#/' $CONF
 sudo sed -i 's/^ListenPort=.*/ListenPort=10050/' $CONF
 sudo sed -i '/^HostMetadata=/s/^/#/' $CONF
 
 # Add HostMetadata if not already present
 if ! grep -q "^HostMetadata=linux" $CONF; then
-    echo "HostMetadata=linux" | sudo tee -a $CONF
+    echo "HostMetadata=linux_github_actions" | sudo tee -a $CONF
 fi
 
 # Restart and enable service
