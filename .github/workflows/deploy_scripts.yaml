@@ -32,7 +32,7 @@
 
 name: EC2 Script Deploy and OS Check
 
-on: workflow_dispatch
+on: push
 
 jobs:
   run_and_deploy:
@@ -54,12 +54,12 @@ jobs:
         run: |
           for REMOTE_IP in $(echo "$REMOTE_IPS" | tr ',' '\n'); do
             echo "--- $REMOTE_IP: OS Version ---"
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
+            sudo ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
 
             echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
-            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+            sudo scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
 
             echo "🚀 Executing script on $REMOTE_USER@$REMOTE_IP ..."
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+            sudo ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
           done
 
