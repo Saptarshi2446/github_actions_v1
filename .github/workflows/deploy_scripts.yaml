@@ -1,31 +1,54 @@
-name: Deploy Zabbix Agent
+# name: Deploy Zabbix Agent
 
-on: push
+# on: push
+
+# jobs:
+#   deploy_agent:
+#     runs-on: self-hosted
+#     steps:
+#       - name: Set up Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Welcome message
+#         run: echo "My first Github Actions Job"
+
+#       - name: List files
+#         run: ls -l
+
+#       - name: Read file
+#         run: cat README.md
+
+#       - name: Check directory
+#         run: pwd
+
+#     #   - name: Move File
+#     #     run: cp deploy_agent.sh /home/ubuntu/
+
+#     #   - name: Move Pem File
+#     #     run: mv zbx_srv1.pem /home/ubuntu/zbx_srv1.pem       
+
+#       - name: Execute the Script
+#         run: bash -x deploy_zabbix_multi.sh
+
+name: EC2 OS Checker
+
+on: workflow_dispatch
 
 jobs:
-  deploy_agent:
-    runs-on: self-hosted
+  check_os_release:
+    runs-on: ubuntu-latest
     steps:
-      - name: Set up Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repo (fetch PEM file)
+        uses: actions/checkout@v3
 
-      - name: Welcome message
-        run: echo "My first Github Actions Job"
+      - name: Make PEM file secure
+        run: chmod 600 zbx_srv1.pem
 
-      - name: List files
-        run: ls -l
-
-      - name: Read file
-        run: cat README.md
-
-      - name: Check directory
-        run: pwd
-
-    #   - name: Move File
-    #     run: cp deploy_agent.sh /home/ubuntu/
-
-    #   - name: Move Pem File
-    #     run: mv zbx_srv1.pem /home/ubuntu/zbx_srv1.pem       
-
-      - name: Execute the Script
-        run: bash -x deploy_zabbix_multi.sh
+      - name: Run cat /etc/os-release on all EC2 instances
+        env:
+          REMOTE_IPS: ${{ secrets.REMOTE_IPS }}
+        run: |
+          for IP in $(echo "$REMOTE_IPS" | tr ',' '\n'); do
+            echo "--- $IP ---"
+            ssh -i zbx_srv1.pem -o StrictHostKeyChecking=no ubuntu@"$IP" "cat /etc/os-release"
+          done
