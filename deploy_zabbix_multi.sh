@@ -26,10 +26,10 @@ while read -r REMOTE_IP; do
     [[ -z "$REMOTE_IP" || "$REMOTE_IP" =~ ^# ]] && continue
 
     echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
-    scp -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+    scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
 
     echo "🚀 Executing script on $REMOTE_USER@$REMOTE_IP ..."
-    ssh -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+    ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
 
     echo "✅ Done with $REMOTE_IP"
     echo "---------------------------------------------"
