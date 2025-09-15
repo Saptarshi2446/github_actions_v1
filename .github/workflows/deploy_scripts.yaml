@@ -30,6 +30,39 @@
 #       - name: Execute the Script
 #         run: bash -x deploy_zabbix_multi.sh
 
+# name: EC2 Script Deploy and OS Check
+
+# on: push
+
+# jobs:
+#   run_and_deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout repo (fetch PEM and script)
+#         uses: actions/checkout@v3
+
+#       - name: Secure PEM file
+#         run: chmod 600 zbx_srv1.pem
+
+#       - name: Run commands and deploy script on EC2
+#         env:
+#           REMOTE_IPS: ${{ secrets.REMOTE_IPS }}
+#           PEM_FILE: zbx_srv1.pem
+#           REMOTE_USER: ubuntu
+#           SCRIPT_LOCAL: zabbix_agent_add.sh
+#           SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
+#         run: |
+#           for REMOTE_IP in $(echo "$REMOTE_IPS" | tr ',' '\n'); do
+#             echo "--- $REMOTE_IP: OS Version ---"
+#             sudo ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
+
+#             echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
+#             sudo scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+
+#             echo "🚀 Executing script on $REMOTE_USER@$REMOTE_IP ..."
+#             sudo ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+#           done
+
 name: EC2 Script Deploy and OS Check
 
 on: push
@@ -46,20 +79,27 @@ jobs:
 
       - name: Run commands and deploy script on EC2
         env:
-          REMOTE_IPS: ${{ secrets.REMOTE_IPS }}
+          REMOTE_HOSTS: ${{ secrets.REMOTE_HOSTS }}
           PEM_FILE: zbx_srv1.pem
           REMOTE_USER: ubuntu
           SCRIPT_LOCAL: zabbix_agent_add.sh
           SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
         run: |
-          for REMOTE_IP in $(echo "$REMOTE_IPS" | tr ',' '\n'); do
-            echo "--- $REMOTE_IP: OS Version ---"
-            sudo ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
+          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_HOSTS"
+          for PAIR in "${HOST_PAIRS[@]}"; do
+            REMOTE_IP="${PAIR%%:*}"
+            REMOTE_HOSTNAME="${PAIR#*:}"
+
+            echo "--- $REMOTE_IP ($REMOTE_HOSTNAME): OS Version ---"
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
 
             echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
-            sudo scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
 
             echo "🚀 Executing script on $REMOTE_USER@$REMOTE_IP ..."
-            sudo ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+
+            # Example usage of hostname variable (for logs/metadata)
+            echo "Finished tasks for $REMOTE_HOSTNAME ($REMOTE_IP)"
           done
 
