@@ -69,7 +69,7 @@ on: push
 
 jobs:
   run_and_deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout repo (fetch PEM and script)
         uses: actions/checkout@v3
@@ -83,7 +83,10 @@ jobs:
           PEM_FILE: zbx_srv1.pem
           REMOTE_USER: ubuntu
           SCRIPT_LOCAL: zabbix_agent_add.sh
+          SCRIPT_LOCAL_PYTHON: zabbix_host_add.py
           SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
+          SCRIPT_REMOTE_PYTHON: /home/ubuntu/zabbix_host_add.py
+
         run: |
           IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_HOSTS"
           for PAIR in "${HOST_PAIRS[@]}"; do
@@ -96,9 +99,15 @@ jobs:
             echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
             scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
 
+            echo "📦 Copying $SCRIPT_LOCAL_PYTHON to $REMOTE_USER@$REMOTE_IP ..."
+            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL_PYTHON" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE_PYTHON"
+
             echo "🚀 Executing script on $REMOTE_USER@$REMOTE_IP ..."
             ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
 
+            echo "🚀 Executing PYTHON script on $REMOTE_USER@$REMOTE_IP ..."
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "python3 $SCRIPT_REMOTE_PYTHON $REMOTE_IP $REMOTE_HOSTNAME"
+            
             # Example usage of hostname variable (for logs/metadata)
             echo "Finished tasks for $REMOTE_HOSTNAME ($REMOTE_IP)"
           done
