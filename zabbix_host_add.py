@@ -36,6 +36,7 @@ else:
     exit()
 
 # Host creation payload
+# Host creation payload
 host_payload = {
     'jsonrpc': '2.0',
     'method': 'host.create',
@@ -51,8 +52,16 @@ host_payload = {
                 'port': 10050,
             }
         ],
-        "groups": 115,
-        "templates": 10001
+        "groups": [
+            {
+                "groupid": "115"
+            }
+        ],
+        "templates": [
+            {
+                "templateid": "10001"
+            }
+        ],
     },
     'auth': auth_token,
     'id': 2,
