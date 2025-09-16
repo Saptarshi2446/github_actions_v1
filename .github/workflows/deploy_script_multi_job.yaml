@@ -1,4 +1,4 @@
-name: EC2 Script Deploy and OS Check
+name: EC2 Script Deploy and OS Check with multi Job
 
 on: push
 
@@ -55,7 +55,7 @@ jobs:
 
             echo "🚀 Executing agent script on $REMOTE_USER@$REMOTE_IP ..."
             ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
-            
+
             echo "Finished agent steps for $REMOTE_HOSTNAME ($REMOTE_IP)"
           done
 
