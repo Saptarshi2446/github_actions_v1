@@ -6,7 +6,7 @@ import sys
 custom_text = sys.argv[2]
 custom_IP = sys.argv[1]
 
-url = "http://172.31.42.131:8080/api_jsonrpc.php"
+url = "http://3.144.241.223:8080/api_jsonrpc.php"
 username = "Zabbix"
 password = "Nocteam@@456"
 
