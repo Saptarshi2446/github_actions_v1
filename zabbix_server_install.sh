@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo apt update
-sudo vim /etc/apt/sources.list.d/pgdg.list
+sudo touch /etc/apt/sources.list.d/pgdg.list
 sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 sleep 2
 sudo wget https://www.postgresql.org/media/keys/ACCC4CF8.asc
