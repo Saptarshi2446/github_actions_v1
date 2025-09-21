@@ -15,4 +15,4 @@ jobs:
         pwd
         ls -l
         chmod +x zabbix_server_install.sh
-        bash x zabbix_server_install.sh
+        bash -x zabbix_server_install.sh
