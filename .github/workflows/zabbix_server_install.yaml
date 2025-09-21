@@ -1,0 +1,17 @@
+name: Zabbix Server setup
+
+on: workflow_dispatch
+
+jobs:
+  add-host:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v4
+
+    - name: Install Zabbix Server
+      run: |
+        pwd
+        chmod +x zabbix_server_install.sh
+        bash x zabbix_server_install.sh
