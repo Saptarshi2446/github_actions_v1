@@ -1,6 +1,6 @@
 name: Zabbix Server setup
 
-on: workflow_dispatch
+on: push
 
 jobs:
   add-host:
@@ -13,7 +13,6 @@ jobs:
     - name: Install Zabbix Server
       run: |
         pwd
-        ll
         ls -l
         chmod +x zabbix_server_install.sh
         bash x zabbix_server_install.sh
