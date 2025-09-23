@@ -10,7 +10,8 @@ sudo apt-key add ACCC4CF8.asc
 sleep 2
 sudo apt update -y
 # Install PostgreSQL 15 + Apache
-sudo apt install -y postgresql-15 postgresql-server-dev-15 apache2
+sudo apt install postgresql-server-dev-15 postgresql-15 apache2
+sudo psql -V
 
 # Update pg_hba.conf: replace peer/md5 with trust
 sudo sed -i 's/peer/trust/g' /etc/postgresql/15/main/pg_hba.conf
