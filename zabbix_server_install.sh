@@ -61,12 +61,13 @@ sudo cp /tmp/script/zabbix.conf.php /etc/zabbix/web/
 sudo chmod 600 /etc/zabbix/web/zabbix.conf.php
 sudo chown www-data:www-data /etc/zabbix/web/zabbix.conf.php
 
+sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db1
  #/etc/apache2/mods-available/status.conf
 ## monitor postgresql
-sudo cp -r /tmp/script/postgresql /var/lib/zabbix/
-sudo cp -r /tmp/script/template_db_postgresql.conf /etc/zabbix/zabbix_agentd.d/
-sudo chown -R zabbix:zabbix /var/lib/zabbix
-sudo chmod -R 755 /var/lib/zabbix
+# sudo cp -r /tmp/script/postgresql /var/lib/zabbix/
+# sudo cp -r /tmp/script/template_db_postgresql.conf /etc/zabbix/zabbix_agentd.d/
+# sudo chown -R zabbix:zabbix /var/lib/zabbix
+# sudo chmod -R 755 /var/lib/zabbix
 
 # ## install web service for reports
 # sudo apt install -y zabbix-web-service
