@@ -57,11 +57,13 @@ sed -i 's/^Server=.*/Server=127.0.0.1/g' /etc/zabbix/zabbix_agentd.conf
 sed -i 's/^ServerActive=.*/ServerActive=127.0.0.1g' /etc/zabbix/zabbix_agentd.conf
 
 sudo mkdir /var/lib/zabbix
-sudo cp /tmp/script/zabbix.conf.php /etc/zabbix/web/
-sudo chmod 600 /etc/zabbix/web/zabbix.conf.php
-sudo chown www-data:www-data /etc/zabbix/web/zabbix.conf.php
+# sudo cp /tmp/script/zabbix.conf.php /etc/zabbix/web/
+# sudo chmod 600 /etc/zabbix/web/zabbix.conf.php
+# sudo chown www-data:www-data /etc/zabbix/web/zabbix.conf.php
 
 sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db1
+sudo systemctl status zabbix-server
+sudo ip addr show
  #/etc/apache2/mods-available/status.conf
 ## monitor postgresql
 # sudo cp -r /tmp/script/postgresql /var/lib/zabbix/
