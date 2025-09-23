@@ -13,24 +13,23 @@ sleep 2
 sudo apt-key add ACCC4CF8.asc
 sleep 2
 sudo apt update -y
-# Install PostgreSQL 15 + Apache
-sudo apt install postgresql-server-dev-15 postgresql-15
+
 sudo psql -V
 
 # Update pg_hba.conf: replace peer/md5 with trust
-sudo sed -i 's/peer/trust/g' /etc/postgresql/15/main/pg_hba.conf
-sudo sed -i 's/md5/trust/g' /etc/postgresql/15/main/pg_hba.conf
+sudo sed -i 's/peer/trust/g' /etc/postgresql/14/main/pg_hba.conf
+sudo sed -i 's/md5/trust/g' /etc/postgresql/14/main/pg_hba.conf
 
 # Allow all connections from all hosts (trust, insecure but fine for test)
-echo "host    all    all    0.0.0.0/0    trust" | sudo tee -a /etc/postgresql/15/main/pg_hba.conf
-echo "host    all    all    ::/0         trust" | sudo tee -a /etc/postgresql/15/main/pg_hba.conf
+echo "host    all    all    0.0.0.0/0    trust" | sudo tee -a /etc/postgresql/14/main/pg_hba.conf
+echo "host    all    all    ::/0         trust" | sudo tee -a /etc/postgresql/14/main/pg_hba.conf
 
 # Allow Postgres to listen on all addresses
-sudo sed -i "s/^#listen_addresses =.*/listen_addresses = '*'/g" /etc/postgresql/15/main/postgresql.conf
+sudo sed -i "s/^#listen_addresses =.*/listen_addresses = '*'/g" /etc/postgresql/14/main/postgresql.conf
 
 # Enable and restart services
-sudo systemctl enable --now postgresql@15-main apache2
-sudo systemctl restart postgresql@15-main
+sudo systemctl enable --now postgresql@14-main apache2
+sudo systemctl restart postgresql@14-main
 sudo wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo apt update -y
