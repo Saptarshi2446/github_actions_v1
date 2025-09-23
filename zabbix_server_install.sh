@@ -63,6 +63,11 @@ sudo mkdir /var/lib/zabbix
 
 sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db1
 sudo systemctl status zabbix-server
+sudo systemctl start zabbix-server
+sudo systemctl status zabbix-server
+sudo systemctl enable zabbix-server
+sudo systemctl status zabbix-server
+
 sudo ip addr show
  #/etc/apache2/mods-available/status.conf
 ## monitor postgresql
