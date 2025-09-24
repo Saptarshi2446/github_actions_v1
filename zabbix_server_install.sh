@@ -37,20 +37,20 @@ sudo apt install zabbix-server-pgsql zabbix-frontend-php php8.1-pgsql zabbix-apa
 #
 sudo su - postgres <<EOF
 psql -c "alter user postgres with password 'password'"
-createuser zabbixuser
-psql -c "alter user zabbixuser with password 'zabbixpass'"
-createuser zbx_monitor
-psql -c "alter user zbx_monitor with password 'password'"
-createdb zabbix_db -O zabbixuser
-psql -c "grant all privileges on database zabbix_db to zabbixuser"
-psql -c "grant pg_monitor to zbx_monitor"
+createuser zabbix_user
+psql -c "alter user zabbix_user with password 'zabbixpass'"
+createuser zbx_monitor_1
+psql -c "alter user zbx_monitor_1 with password 'password'"
+createdb zabbix_db -O zabbix_user
+psql -c "grant all privileges on database zabbix_db to zabbix_user"
+psql -c "grant pg_monitor to zbx_monitor_1"
 EOF
-sudo psql -U zabbixuser -w zabbix_db < /tmp/zabbix_demo.sql
-#sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db
+# sudo psql -U zabbix_user -w zabbix_db < /tmp/zabbix_demo.sql
+#sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbix_user -w zabbix_db
 
 #sed -i  "s/\.*#DBHost=localhost/DBHost=$host/" /etc/zabbix/zabbix_server.conf
 sudo sed -i "s/DBName=.*/DBName=zabbix_db/" /etc/zabbix/zabbix_server.conf
-sudo sed -i "s/DBUser=.*/DBUser=zabbixuser/" /etc/zabbix/zabbix_server.conf
+sudo sed -i "s/DBUser=.*/DBUser=zabbix_user/" /etc/zabbix/zabbix_server.conf
 sudo sed -i "s/.*DBPassword=.*/DBPassword=zabbixpass/" /etc/zabbix/zabbix_server.conf
 
 sed -i 's/^Server=.*/Server=127.0.0.1/g' /etc/zabbix/zabbix_agentd.conf
@@ -61,7 +61,7 @@ sudo mkdir /var/lib/zabbix
 # sudo chmod 600 /etc/zabbix/web/zabbix.conf.php
 # sudo chown www-data:www-data /etc/zabbix/web/zabbix.conf.php
 
-sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db
+sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbix_user -w zabbix_db
 sudo systemctl status zabbix-server
 sudo systemctl start zabbix-server
 sudo systemctl status zabbix-server
