@@ -4,7 +4,7 @@ on: push
 
 jobs:
   add-host:
-    runs-on: [ip-172-31-33-57]
+    runs-on: self-hosted
 
     steps:
     - name: Checkout Repo
