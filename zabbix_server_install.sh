@@ -33,7 +33,7 @@ sudo systemctl restart postgresql@14-main
 sudo wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo apt update -y
-sudo apt install zabbix-server-pgsql zabbix-frontend-php php8.1-pgsql zabbix-apache-conf zabbix-sql-scripts zabbix-agent apache2
+sudo apt install zabbix-server-pgsql zabbix-frontend-php php8.1-pgsql zabbix-apache-conf zabbix-sql-scripts zabbix-agent apache2 -y
 #
 sudo su - postgres <<EOF
 psql -c "alter user postgres with password 'password'"
