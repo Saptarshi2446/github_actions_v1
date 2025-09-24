@@ -1,18 +1,18 @@
 #!/bin/bash
 
 sudo cat /etc/os-release
-sudo apt update
-sudo touch /etc/apt/sources.list.d/pgdg.list
-sudo chmod +x '/etc/apt/sources.list.d/pgdg.list'
-sudo ls -l '/etc/apt/sources.list.d/pgdg.list'
-sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-sleep 2
-sudo cat '/etc/apt/sources.list.d/pgdg.list'
-sudo wget https://www.postgresql.org/media/keys/ACCC4CF8.asc
-sleep 2
-sudo apt-key add ACCC4CF8.asc
-sleep 2
-sudo apt update -y
+# sudo apt update
+# sudo touch /etc/apt/sources.list.d/pgdg.list
+# sudo chmod +x '/etc/apt/sources.list.d/pgdg.list'
+# sudo ls -l '/etc/apt/sources.list.d/pgdg.list'
+# sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+# sleep 2
+# sudo cat '/etc/apt/sources.list.d/pgdg.list'
+# sudo wget https://www.postgresql.org/media/keys/ACCC4CF8.asc
+# sleep 2
+# sudo apt-key add ACCC4CF8.asc
+# sleep 2
+# sudo apt update -y
 
 sudo psql -V
 
