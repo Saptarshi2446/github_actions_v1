@@ -28,8 +28,8 @@ echo "host    all    all    ::/0         trust" | sudo tee -a /etc/postgresql/14
 sudo sed -i "s/^#listen_addresses =.*/listen_addresses = '*'/g" /etc/postgresql/14/main/postgresql.conf
 
 # Enable and restart services
-sudo systemctl enable --now postgresql@14-main apache2
-sudo systemctl restart postgresql@14-main
+sudo systemctl enable --now postgresql
+sudo systemctl restart postgresql
 sudo wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo apt update -y
@@ -41,15 +41,15 @@ createuser zabbixuser
 psql -c "alter user zabbixuser with password 'zabbixpass'"
 createuser zbx_monitor
 psql -c "alter user zbx_monitor with password 'password'"
-createdb zabbix_db1 -O zabbixuser
-psql -c "grant all privileges on database zabbix_db1 to zabbixuser"
+createdb zabbix_db -O zabbixuser
+psql -c "grant all privileges on database zabbix_db to zabbixuser"
 psql -c "grant pg_monitor to zbx_monitor"
 EOF
-sudo psql -U zabbixuser -w zabbix_db1 < /tmp/zabbix_demo.sql
-#sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db1
+sudo psql -U zabbixuser -w zabbix_db < /tmp/zabbix_demo.sql
+#sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db
 
 #sed -i  "s/\.*#DBHost=localhost/DBHost=$host/" /etc/zabbix/zabbix_server.conf
-sudo sed -i "s/DBName=.*/DBName=zabbix_db1/" /etc/zabbix/zabbix_server.conf
+sudo sed -i "s/DBName=.*/DBName=zabbix_db/" /etc/zabbix/zabbix_server.conf
 sudo sed -i "s/DBUser=.*/DBUser=zabbixuser/" /etc/zabbix/zabbix_server.conf
 sudo sed -i "s/.*DBPassword=.*/DBPassword=zabbixpass/" /etc/zabbix/zabbix_server.conf
 
@@ -61,7 +61,7 @@ sudo mkdir /var/lib/zabbix
 # sudo chmod 600 /etc/zabbix/web/zabbix.conf.php
 # sudo chown www-data:www-data /etc/zabbix/web/zabbix.conf.php
 
-sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db1
+sudo zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U zabbixuser -w zabbix_db
 sudo systemctl status zabbix-server
 sudo systemctl start zabbix-server
 sudo systemctl status zabbix-server
