@@ -38,9 +38,7 @@ jobs:
           PEM_FILE: zbx_srv1.pem
           REMOTE_USER: ubuntu
           SCRIPT_LOCAL: zabbix_agent_add.sh
-          SCRIPT_LOCAL_PYTHON: zabbix_host_add.py
           SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
-          SCRIPT_REMOTE_PYTHON: /home/ubuntu/zabbix_host_add.py
         run: |
           IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_HOSTS"
           for PAIR in "${HOST_PAIRS[@]}"; do
