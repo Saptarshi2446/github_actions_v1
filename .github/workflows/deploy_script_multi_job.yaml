@@ -11,10 +11,10 @@ jobs:
 
       - name: Add host via API Python script for each pair
         env:
-          REMOTE_HOSTS: ${{ secrets.REMOTE_HOSTS }}
+          REMOTE_IPS: ${{ secrets.REMOTE_IPS }}
           SCRIPT_LOCAL_PYTHON: zabbix_host_add.py
         run: |
-          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_HOSTS"
+          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
           for PAIR in "${HOST_PAIRS[@]}"; do
             REMOTE_IP="${PAIR%%:*}"
             REMOTE_HOSTNAME="${PAIR#*:}"
@@ -34,13 +34,13 @@ jobs:
 
       - name: Run commands and deploy agent script on EC2
         env:
-          REMOTE_HOSTS: ${{ secrets.REMOTE_HOSTS }}
+          REMOTE_IPS: ${{ secrets.REMOTE_IPS }}
           PEM_FILE: zbx_srv1.pem
           REMOTE_USER: ubuntu
           SCRIPT_LOCAL: zabbix_agent_add.sh
           SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
         run: |
-          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_HOSTS"
+          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
           for PAIR in "${HOST_PAIRS[@]}"; do
             REMOTE_IP="${PAIR%%:*}"
             REMOTE_HOSTNAME="${PAIR#*:}"
