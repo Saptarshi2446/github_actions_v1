@@ -54,7 +54,7 @@ host_payload = {
         ],
         "groups": [
             {
-                "groupid": "115"
+                "groupid": "20"
             }
         ],
         "templates": [
