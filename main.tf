@@ -12,3 +12,18 @@ resource "aws_instance" "my_ec2_instance" {
     Name = "MyEC2Instance-${count.index}"
   }
 }
+
+output "instance_public_ips" {
+  description = "Public IP addresses of the EC2 instances"
+  value       = aws_instance.my_ec2_instance[*].public_ip
+}
+
+output "instance_private_ips" {
+  description = "Private IP addresses of the EC2 instances"
+  value       = aws_instance.my_ec2_instance[*].private_ip
+}
+
+output "instance_hostnames" {
+  description = "Private DNS hostnames of the EC2 instances"
+  value       = aws_instance.my_ec2_instance[*].private_dns
+}
