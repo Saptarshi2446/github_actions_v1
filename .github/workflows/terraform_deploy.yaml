@@ -85,7 +85,9 @@ jobs:
           echo "remote_ips=$remote_ips" >> $GITHUB_OUTPUT          
 
       - name: Debug REMOTE_IPS
-        run: echo "REMOTE_IPS=$remote_ips"
+        env:
+          REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
+        run: echo "REMOTE_IPS=$REMOTE_IPS"
 
 
   # add-host:
