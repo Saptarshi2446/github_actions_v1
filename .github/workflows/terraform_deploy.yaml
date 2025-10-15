@@ -87,10 +87,8 @@ jobs:
   add-host:
     runs-on: ubuntu-latest
     needs: terraform
-    env:
-      REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
     steps:
-      - run: echo "REMOTE_IPS=$REMOTE_IPS"
+      - run: echo "${{ needs.terraform.outputs.remote_ips }}"
 
 
 
