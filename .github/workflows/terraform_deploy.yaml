@@ -75,58 +75,51 @@ jobs:
   add-host:
     runs-on: ubuntu-latest
     needs: terraform
+    env:
+      REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
     steps:
-      - run: echo "${{ needs.terraform.outputs.remote_ips }}"
+      - run: echo "REMOTE_IPS=$REMOTE_IPS"
 
+      - name: Checkout repo (fetch python script)
+        uses: actions/checkout@v3
 
+      - name: Add host via API Python script for each pair
+        run: |
+          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
+          for PAIR in "${HOST_PAIRS[@]}"; do
+            REMOTE_IP="${PAIR%%:*}"
+            REMOTE_HOSTNAME="${PAIR#*:}"
+            echo "Adding host $REMOTE_HOSTNAME with IP $REMOTE_IP..."
+            python3 "$SCRIPT_LOCAL_PYTHON" "$REMOTE_IP" "$REMOTE_HOSTNAME"
+          done
 
-  # add-host:
-  #   runs-on: ubuntu-latest
-  #   needs: terraform
-  #   env:
-  #     REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
-  #     SCRIPT_LOCAL_PYTHON: zabbix_host_add.py
-  #   steps:
-  #     - name: Checkout repo (fetch python script)
-  #       uses: actions/checkout@v3
+  add-agent:
+    runs-on: ubuntu-latest
+    needs: terraform
+    env:
+      REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
+      PEM_FILE: zbx_srv1.pem
+      REMOTE_USER: ubuntu
+      SCRIPT_LOCAL: zabbix_agent_add.sh
+      SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
+    steps:
+      - name: Checkout repo (fetch PEM and scripts)
+        uses: actions/checkout@v3
 
-  #     - name: Add host via API Python script for each pair
-  #       run: |
-  #         IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
-  #         for PAIR in "${HOST_PAIRS[@]}"; do
-  #           REMOTE_IP="${PAIR%%:*}"
-  #           REMOTE_HOSTNAME="${PAIR#*:}"
-  #           echo "Adding host $REMOTE_HOSTNAME with IP $REMOTE_IP..."
-  #           python3 "$SCRIPT_LOCAL_PYTHON" "$REMOTE_IP" "$REMOTE_HOSTNAME"
-  #         done
+      - name: Secure PEM file
+        run: chmod 600 zbx_srv1.pem
 
-  # add-agent:
-  #   runs-on: ubuntu-latest
-  #   needs: terraform
-  #   env:
-  #     REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
-  #     PEM_FILE: zbx_srv1.pem
-  #     REMOTE_USER: ubuntu
-  #     SCRIPT_LOCAL: zabbix_agent_add.sh
-  #     SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
-  #   steps:
-  #     - name: Checkout repo (fetch PEM and scripts)
-  #       uses: actions/checkout@v3
-
-  #     - name: Secure PEM file
-  #       run: chmod 600 zbx_srv1.pem
-
-  #     - name: Run commands and deploy agent script on EC2
-  #       run: |
-  #         IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
-  #         for PAIR in "${HOST_PAIRS[@]}"; do
-  #           REMOTE_IP="${PAIR%%:*}"
-  #           REMOTE_HOSTNAME="${PAIR#*:}"
-  #           echo "--- $REMOTE_IP ($REMOTE_HOSTNAME): OS Version ---"
-  #           ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
-  #           echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
-  #           scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
-  #           echo "🚀 Executing agent script on $REMOTE_USER@$REMOTE_IP ..."
-  #           ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
-  #           echo "Finished agent steps for $REMOTE_HOSTNAME ($REMOTE_IP)"
-  #         done
+      - name: Run commands and deploy agent script on EC2
+        run: |
+          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
+          for PAIR in "${HOST_PAIRS[@]}"; do
+            REMOTE_IP="${PAIR%%:*}"
+            REMOTE_HOSTNAME="${PAIR#*:}"
+            echo "--- $REMOTE_IP ($REMOTE_HOSTNAME): OS Version ---"
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
+            echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
+            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+            echo "🚀 Executing agent script on $REMOTE_USER@$REMOTE_IP ..."
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+            echo "Finished agent steps for $REMOTE_HOSTNAME ($REMOTE_IP)"
+          done
