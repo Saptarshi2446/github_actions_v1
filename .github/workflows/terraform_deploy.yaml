@@ -84,10 +84,14 @@ jobs:
           # Set output variable for downstream jobs
           echo "remote_ips=$remote_ips" >> $GITHUB_OUTPUT          
 
-      - name: Debug REMOTE_IPS
-        env:
-          REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
-        run: echo "REMOTE_IPS=$REMOTE_IPS"
+  add-host:
+    runs-on: self-hosted
+    needs: terraform
+    env:
+      REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
+    steps:
+      - run: echo "REMOTE_IPS=$REMOTE_IPS"
+
 
 
   # add-host:
