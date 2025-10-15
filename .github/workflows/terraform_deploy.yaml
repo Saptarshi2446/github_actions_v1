@@ -13,6 +13,9 @@ env:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    outputs:         # <-- Add this block!
+      remote_ips: ${{ steps.format_remotes.outputs.remote_ips }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,21 +44,6 @@ jobs:
         run: |
           echo "public_ips=$(terraform output -json instance_public_ips)" >> "$GITHUB_OUTPUT"
           echo "hostnames=$(terraform output -json instance_hostnames)" >> "$GITHUB_OUTPUT"
-
-      # - name: Format REMOTE_IPS for next jobs
-      #   id: format_remotes
-      #   run: |
-      #     ips=$(echo '${{ steps.tf_outputs.outputs.public_ips }}' | jq -r '.[]')
-      #     hostnames=$(echo '${{ steps.tf_outputs.outputs.hostnames }}' | jq -r '.[]')
-      #     n=$(echo "$ips" | wc -l)
-      #     out_arr=()
-      #     for i in $(seq 1 $n); do
-      #       ip=$(echo "$ips" | sed -n "${i}p")
-      #       hn=$(echo "$hostnames" | sed -n "${i}p")
-      #       out_arr+=("${ip}:${hn}")
-      #     done
-      #     remote_ips=$(IFS=,; echo "${out_arr[*]}")
-      #     echo "remote_ips=$remote_ips" >> "$GITHUB_OUTPUT"
 
       - name: Format REMOTE_IPS for next jobs
         id: format_remotes
