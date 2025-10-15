@@ -2,7 +2,10 @@
 provider "aws" {
   region = "us-east-2" # Replace with your desired region
 }
-
+# Fetch default VPC for simplicity
+data "aws_vpc" "default" {
+  default = true
+}
 resource "aws_security_group" "my_ec2_sg" {
   name        = "my-ec2-sg"
   description = "Allow all inbound and outbound traffic"
