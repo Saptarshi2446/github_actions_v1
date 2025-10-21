@@ -78,23 +78,21 @@ jobs:
     env:
       REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
     steps:
-      - run: echo "REMOTE_IPS=$REMOTE_IPS"
+      - run: echo "REMOTE_IPS=$REMOTE_IPS"        # Debug to ensure value is present
 
       - name: Checkout repo (fetch python script)
         uses: actions/checkout@v3
 
       - name: Add host via API Python script for each pair
-        env:
-          REMOTE_IPS: ${{ secrets.REMOTE_IPS }}
-          SCRIPT_LOCAL_PYTHON: zabbix_host_add.py
         run: |
           IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
           for PAIR in "${HOST_PAIRS[@]}"; do
             REMOTE_IP="${PAIR%%:*}"
             REMOTE_HOSTNAME="${PAIR#*:}"
             echo "Adding host $REMOTE_HOSTNAME with IP $REMOTE_IP..."
-            python3 "$SCRIPT_LOCAL_PYTHON" "$REMOTE_IP" "$REMOTE_HOSTNAME"
+            python3 zabbix_host_add.py "$REMOTE_IP" "$REMOTE_HOSTNAME"
           done
+
 
   add-agent:
     runs-on: ubuntu-latest
