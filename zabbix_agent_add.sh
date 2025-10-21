@@ -9,8 +9,8 @@ if command -v zabbix_agentd >/dev/null 2>&1; then
 else
     echo "Installing Zabbix agent..."
     # Add and setup repo
-    wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_6.0+ubuntu22.04_all.deb 
-    sudo dpkg -i zabbix-release_latest_6.0+ubuntu22.04_all.deb
+    wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_6.0+ubuntu24.04_all.deb 
+    sudo dpkg -i zabbix-release_latest_6.0+ubuntu24.04_all.deb
     sudo apt update -y
     sudo apt install -y zabbix-agent
 fi
