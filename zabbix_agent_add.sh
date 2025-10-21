@@ -29,5 +29,6 @@ sudo sed -i 's/^#*\s*HostMetadata=.*/HostMetadata=linux_github_actions/' "/etc/z
 # Restart and enable service
 sudo systemctl enable zabbix-agent
 sudo systemctl restart zabbix-agent
+sudo systemctl show -p ActiveState,SubState zabbix-agent
 
 echo "Zabbix agent installation and configuration complete."
