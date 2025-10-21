@@ -3,7 +3,6 @@ provider "aws" {
   region = "us-east-2" # Replace with your desired region
 }
 
-
 resource "aws_instance" "my_ec2_instance" {
   count         = 1 # Number of EC2 instances to create
   ami           = "ami-0d1b5a8c13042c939" # Replace with a valid AMI ID for your region
