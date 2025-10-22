@@ -6,7 +6,7 @@ import sys
 custom_text = sys.argv[2]
 custom_IP = sys.argv[1]
 
-url = "http://18.216.190.95/zabbix/api_jsonrpc.php"
+url = "http://172.31.33.57/zabbix/api_jsonrpc.php"
 username = "Admin"
 password = "zabbix"
 

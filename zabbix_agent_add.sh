@@ -18,8 +18,8 @@ fi
 # Configure agentd.conf safely
 CONF="/etc/zabbix/zabbix_agentd.conf"
 
-sudo sed -i 's/^Server=.*/Server=18.216.190.95/' $CONF
-sudo sed -i 's/^ServerActive=.*/ServerActive=18.216.190.95/' $CONF
+sudo sed -i 's/^Server=.*/Server=172.31.33.57/' $CONF
+sudo sed -i 's/^ServerActive=.*/ServerActive=172.31.33.57/' $CONF
 sudo sed -i '/^Hostname=/s/^/#/' $CONF
 sudo sed -i 's/^ListenPort=.*/ListenPort=10050/' $CONF
 sudo sed -i 's/^#*\s*HostMetadata=.*/HostMetadata=linux_github_actions/' "/etc/zabbix/zabbix_agentd.conf"
