@@ -73,7 +73,7 @@ jobs:
           echo "remote_ips=$remote_ips" >> $GITHUB_OUTPUT          
 
   add-host:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: terraform
     env:
       REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
@@ -95,7 +95,7 @@ jobs:
 
 
   add-agent:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: terraform
     env:
       REMOTE_IPS: ${{ needs.terraform.outputs.remote_ips }}
