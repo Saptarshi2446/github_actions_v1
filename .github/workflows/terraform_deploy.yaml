@@ -42,13 +42,13 @@ jobs:
       - name: Get Terraform outputs for IPs and hostnames
         id: tf_outputs
         run: |
-          echo "public_ips=$(terraform output -json instance_public_ips)" >> "$GITHUB_OUTPUT"
+          echo "private_ips=$(terraform output -json instance_private_ips)" >> "$GITHUB_OUTPUT"
           echo "hostnames=$(terraform output -json instance_hostnames)" >> "$GITHUB_OUTPUT"
 
       - name: Format REMOTE_IPS for next jobs
         id: format_remotes
         run: |
-          ips=$(echo '${{ steps.tf_outputs.outputs.public_ips }}' | jq -r '.[]')
+          ips=$(echo '${{ steps.tf_outputs.outputs.private_ips }}' | jq -r '.[]')
           hosts=$(echo '${{ steps.tf_outputs.outputs.hostnames }}' | jq -r '.[]')
           
           # Initialize output array
