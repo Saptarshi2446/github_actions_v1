@@ -59,20 +59,55 @@ jobs:
       - name: Debug hosts
         run: cat agent_hosts.txt
 
+      # - name: Install agents
+      #   run: |
+      #     while IFS=',' read -r hostname ip
+      #     do
+      #       echo "--- $ip ($hostname): OS Version ---"
+
+      #       ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "cat /etc/os-release" || echo "SSH check failed"
+
+      #       echo "📦 Copying $SCRIPT_LOCAL..."
+      #       scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$ip:$SCRIPT_REMOTE"
+
+      #       echo "🚀 Running agent install..."
+      #       ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE"
+
+      #       echo "Finished agent steps for $hostname ($ip)"
+
+      #     done < agent_hosts.txt
       - name: Install agents
         run: |
           while IFS=',' read -r hostname ip
           do
-            echo "--- $ip ($hostname): OS Version ---"
+            echo "--------------------------------"
+            echo "Processing host: $hostname ($ip)"
 
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "cat /etc/os-release" || echo "SSH check failed"
+            echo "Checking SSH connectivity..."
+
+            ssh -o ConnectTimeout=10 \
+                -o StrictHostKeyChecking=no \
+                -i "$PEM_FILE" \
+                "$REMOTE_USER@$ip" "cat /etc/os-release" 2>&1
+
+            if [ $? -ne 0 ]; then
+              echo "❌ SSH connection failed for $hostname ($ip)"
+              echo "Skipping host..."
+              continue
+            fi
 
             echo "📦 Copying $SCRIPT_LOCAL..."
-            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$ip:$SCRIPT_REMOTE"
+            scp -o ConnectTimeout=10 \
+                -o StrictHostKeyChecking=no \
+                -i "$PEM_FILE" \
+                "$SCRIPT_LOCAL" \
+                "$REMOTE_USER@$ip:$SCRIPT_REMOTE" 2>&1
 
             echo "🚀 Running agent install..."
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE"
+            ssh -o StrictHostKeyChecking=no \
+                -i "$PEM_FILE" \
+                "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE" 2>&1
 
-            echo "Finished agent steps for $hostname ($ip)"
+            echo "✅ Finished agent steps for $hostname ($ip)"
 
           done < agent_hosts.txt
