@@ -29,12 +29,156 @@ jobs:
         run: |
           python3 scripts/bulk_host_executor.py inventory/hosts.csv
 
+  # install-agent:
+
+  #   runs-on: self-hosted
+  #   needs: add-hosts
+
+  #   env:
+  #     PEM_FILE: zbx_srv1.pem
+  #     REMOTE_USER: ubuntu
+  #     SCRIPT_LOCAL: zabbix_agent_add.sh
+  #     SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
+
+  #   steps:
+
+  #     - uses: actions/checkout@v3
+
+  #     - name: Extract agent hosts
+  #       run: |
+  #         python3 << 'EOF' > agent_hosts.txt
+  #         import pandas as pd
+
+  #         df = pd.read_csv("inventory/hosts.csv")
+
+  #         for _, row in df.iterrows():
+  #             if str(row["Type"]) == "1":
+  #                 print(f"{row['Hostname']},{row['IP']}")
+  #         EOF
+
+  #     - name: Debug hosts
+  #       run: cat agent_hosts.txt
+
+  #     - name: Generate REMOTE_IPS from CSV
+  #       id: generate_remotes
+  #       run: |
+  #               REMOTE_IPS=$(python3 << 'EOF'
+  #           import pandas as pd
+
+  #           df = pd.read_csv("inventory/hosts.csv")
+
+  #           pairs = []
+
+  #           for _, row in df.iterrows():
+  #               if str(row["Type"]) == "1":
+  #                   pairs.append(f"{row['IP']}:{row['Hostname']}")
+
+  #           print(",".join(pairs))
+  #           EOF
+  #           )
+
+  #               echo "REMOTE_IPS=$REMOTE_IPS"
+  #               echo "remote_ips=$REMOTE_IPS" >> $GITHUB_OUTPUT
+
+  # add-agent:
+
+  #   runs-on: self-hosted
+  #   needs: add-hosts
+
+  #   env:
+  #     REMOTE_IPS: ${{ needs.add-hosts.outputs.remote_ips }}
+  #     PEM_FILE: zbx_srv1.pem
+  #     REMOTE_USER: ubuntu
+  #     SCRIPT_LOCAL: zabbix_agent_add.sh
+  #     SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
+
+  #   steps:
+
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v3
+
+  #     - name: Secure PEM file
+  #       run: chmod 600 zbx_srv1.pem
+
+  #     - name: Deploy agent to hosts
+  #       run: |
+
+  #         echo "Hosts detected: $REMOTE_IPS"
+
+  #         IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
+
+  #         for PAIR in "${HOST_PAIRS[@]}"; do
+
+  #           REMOTE_IP="${PAIR%%:*}"
+  #           REMOTE_HOSTNAME="${PAIR#*:}"
+
+  #           echo "----------------------------------------"
+  #           echo "Processing $REMOTE_HOSTNAME ($REMOTE_IP)"
+
+  #           ssh -o ConnectTimeout=10 \
+  #               -o StrictHostKeyChecking=no \
+  #               -i "$PEM_FILE" \
+  #               "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release" || echo "SSH failed"
+
+  #           echo "📦 Copying agent script..."
+
+  #           scp -o ConnectTimeout=10 \
+  #               -o StrictHostKeyChecking=no \
+  #               -i "$PEM_FILE" \
+  #               "$SCRIPT_LOCAL" \
+  #               "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE" || echo "SCP failed"
+
+  #           echo "🚀 Running agent install..."
+
+  #           ssh -o StrictHostKeyChecking=no \
+  #               -i "$PEM_FILE" \
+  #               "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE" || echo "Install failed"
+
+  #           echo "Finished agent steps for $REMOTE_HOSTNAME ($REMOTE_IP)"
+
+  #         done
+
   install-agent:
 
     runs-on: self-hosted
-    needs: add-hosts
+
+    outputs:
+      remote_ips: ${{ steps.generate_remotes.outputs.remote_ips }}
+
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate REMOTE_IPS from CSV
+        id: generate_remotes
+        run: |
+          REMOTE_IPS=$(python3 << 'EOF'
+          import pandas as pd
+
+          df = pd.read_csv("inventory/hosts.csv")
+
+          pairs = []
+
+          for _, row in df.iterrows():
+              if str(row["Type"]) == "1":
+                  pairs.append(f"{row['IP']}:{row['Hostname']}")
+
+          print(",".join(pairs))
+          EOF
+          )
+
+                  echo "REMOTE_IPS=$REMOTE_IPS"
+                  echo "remote_ips=$REMOTE_IPS" >> $GITHUB_OUTPUT
+
+
+  add-agent:
+
+    runs-on: self-hosted
+    needs: install-agent
 
     env:
+      REMOTE_IPS: ${{ needs.install-agent.outputs.remote_ips }}
       PEM_FILE: zbx_srv1.pem
       REMOTE_USER: ubuntu
       SCRIPT_LOCAL: zabbix_agent_add.sh
@@ -42,86 +186,46 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Extract agent hosts
+      - name: Secure PEM file
+        run: chmod 600 zbx_srv1.pem
+
+      - name: Deploy agent to hosts
         run: |
-          python3 << 'EOF' > agent_hosts.txt
-          import pandas as pd
 
-          df = pd.read_csv("inventory/hosts.csv")
+          echo "Hosts detected: $REMOTE_IPS"
 
-          for _, row in df.iterrows():
-              if str(row["Type"]) == "1":
-                  print(f"{row['Hostname']},{row['IP']}")
-          EOF
+          IFS=',' read -ra HOST_PAIRS <<< "$REMOTE_IPS"
 
-      - name: Debug hosts
-        run: cat agent_hosts.txt
+          for PAIR in "${HOST_PAIRS[@]}"; do
 
-      # - name: Install agents
-      #   run: |
-      #     while IFS=',' read -r hostname ip
-      #     do
-      #       echo "--- $ip ($hostname): OS Version ---"
+            REMOTE_IP="${PAIR%%:*}"
+            REMOTE_HOSTNAME="${PAIR#*:}"
 
-      #       ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "cat /etc/os-release" || echo "SSH check failed"
-
-      #       echo "📦 Copying $SCRIPT_LOCAL..."
-      #       scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$ip:$SCRIPT_REMOTE"
-
-      #       echo "🚀 Running agent install..."
-      #       ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE"
-
-      #       echo "Finished agent steps for $hostname ($ip)"
-
-      #     done < agent_hosts.txt
-      - name: Install agents
-        shell: bash
-        run: |
-          set +e
-
-          while IFS=',' read -r hostname ip
-          do
-            echo "------------------------------------"
-            echo "Processing host: $hostname ($ip)"
-
-            echo "Checking SSH connectivity..."
+            echo "----------------------------------------"
+            echo "Processing $REMOTE_HOSTNAME ($REMOTE_IP)"
 
             ssh -o ConnectTimeout=10 \
                 -o StrictHostKeyChecking=no \
                 -i "$PEM_FILE" \
-                "$REMOTE_USER@$ip" "cat /etc/os-release"
+                "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release" || echo "SSH failed"
 
-            SSH_STATUS=$?
-
-            if [ $SSH_STATUS -ne 0 ]; then
-              echo "❌ SSH failed for $hostname ($ip)"
-              echo "Skipping host..."
-              continue
-            fi
-
-            echo "📦 Copying $SCRIPT_LOCAL..."
+            echo "📦 Copying agent script..."
 
             scp -o ConnectTimeout=10 \
                 -o StrictHostKeyChecking=no \
                 -i "$PEM_FILE" \
                 "$SCRIPT_LOCAL" \
-                "$REMOTE_USER@$ip:$SCRIPT_REMOTE"
-
-            SCP_STATUS=$?
-
-            if [ $SCP_STATUS -ne 0 ]; then
-              echo "❌ SCP failed for $hostname ($ip)"
-              continue
-            fi
+                "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE" || echo "SCP failed"
 
             echo "🚀 Running agent install..."
 
             ssh -o StrictHostKeyChecking=no \
                 -i "$PEM_FILE" \
-                "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE"
+                "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE" || echo "Install failed"
 
-            echo "Finished processing $hostname"
+            echo "Finished agent steps for $REMOTE_HOSTNAME ($REMOTE_IP)"
 
-          done < agent_hosts.txt
+          done
