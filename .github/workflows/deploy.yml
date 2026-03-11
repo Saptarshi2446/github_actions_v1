@@ -1,0 +1,73 @@
+
+name: Zabbix Host Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  add-hosts:
+    runs-on: self-hosted
+
+    env:
+      ZABBIX_URL: ${{ secrets.ZABBIX_URL }}
+      ZABBIX_TOKEN: ${{ secrets.ZABBIX_TOKEN }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          pip install pandas requests openpyxl
+
+      - name: Execute bulk onboarding
+        run: |
+          python3 scripts/bulk_host_executor.py inventory/hosts.csv
+
+  install-agent:
+
+    runs-on: self-hosted
+    needs: add-hosts
+
+    env:
+      PEM_FILE: zbx_srv1.pem
+      REMOTE_USER: ubuntu
+      SCRIPT_LOCAL: zabbix_agent_add.sh
+      SCRIPT_REMOTE: /home/ubuntu/zabbix_agent_add.sh
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - name: Install agents
+        run: |
+
+          tail -n +2 inventory/hosts.csv | while IFS=',' read -r type hostgroup template hostname ip port snmp_type snmp_port security community
+          do
+            if [ "$type" = "1" ]; then
+              REMOTE_IP="$ip"
+              REMOTE_HOSTNAME="$hostname"
+              # echo "Installing agent on $hostname ($ip)"
+
+              # scp -o StrictHostKeyChecking=no -i "$PEM_FILE" \
+              # agent_install/zabbix_agent_add.sh \
+              # "$SSH_USER@$ip:/tmp/"
+
+              # ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" \
+              # "$SSH_USER@$ip" "bash /tmp/zabbix_agent_add.sh"
+              echo "--- $REMOTE_IP ($REMOTE_HOSTNAME): OS Version ---"
+              ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "cat /etc/os-release"
+              
+              echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$REMOTE_IP ..."
+              scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$REMOTE_IP:$SCRIPT_REMOTE"
+              
+              echo "🚀 Executing agent script on $REMOTE_USER@$REMOTE_IP ..."
+              ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$REMOTE_IP" "bash $SCRIPT_REMOTE"
+              
+              echo "Finished agent steps for $REMOTE_HOSTNAME ($REMOTE_IP)"
+            fi
+
+          done
