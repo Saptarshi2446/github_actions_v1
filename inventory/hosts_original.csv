@@ -1,0 +1,4 @@
+Type,HostGroup,Template,Hostname,IP,Port,SNMP_Type,SNMP_Port,SecurityName,Community
+1,47,10611,linux-server01,10.10.10.10,10050,,,,
+2,47,10611,switch01,10.10.10.20,,2,161,,public
+2,47,10611,firewall01,10.10.10.30,,3,161,snmpuser,

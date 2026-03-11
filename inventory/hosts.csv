@@ -1,0 +1,8 @@
+Type,HostGroup,Template,Hostname,IP,Port,SNMP_Type,SNMP_Port,SecurityName,Community
+1,"28,5,78",10001,tf_linux-server01,127.0.0.1,10050,,,,
+2,"28,5,78",10001,tf_linux-server02,127.0.0.1,10050,,,,
+3,5,10001,tf_linux-server03,127.0.0.3,10050,,,,
+4,"28,5",10001,tf_linux-server04,127.0.0.4,10050,,,,
+5,78,10001,tf_linux-server05,127.0.0.1,10050,,,,
+6,"28,",10001,tf_linux-server06,127.0.0.6,10050,,,,
+7,5,10001,tf_linux-server07,127.0.0.1,10050,,,,
