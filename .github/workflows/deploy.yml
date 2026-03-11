@@ -42,13 +42,11 @@ jobs:
 
     steps:
 
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Get agent hosts from inventory
-        id: agent_hosts
+      - name: Extract agent hosts
         run: |
-          python3 << 'EOF'
+          python3 << 'EOF' > agent_hosts.txt
           import pandas as pd
 
           df = pd.read_csv("inventory/hosts.csv")
@@ -57,7 +55,9 @@ jobs:
               if str(row["Type"]) == "1":
                   print(f"{row['Hostname']},{row['IP']}")
           EOF
-                > agent_hosts.txt
+
+      - name: Debug hosts
+        run: cat agent_hosts.txt
 
       - name: Install agents
         run: |
@@ -65,13 +65,13 @@ jobs:
           do
             echo "--- $ip ($hostname): OS Version ---"
 
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "cat /etc/os-release" || echo "SSH check failed for $ip"
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "cat /etc/os-release" || echo "SSH check failed"
 
-            echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$ip ..."
-            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$ip:$SCRIPT_REMOTE" || echo "SCP failed"
+            echo "📦 Copying $SCRIPT_LOCAL..."
+            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$ip:$SCRIPT_REMOTE"
 
-            echo "🚀 Executing agent script on $REMOTE_USER@$ip ..."
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE" || echo "Install failed"
+            echo "🚀 Running agent install..."
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE"
 
             echo "Finished agent steps for $hostname ($ip)"
 
