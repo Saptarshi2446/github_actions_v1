@@ -77,10 +77,13 @@ jobs:
 
       #     done < agent_hosts.txt
       - name: Install agents
+        shell: bash
         run: |
+          set +e
+
           while IFS=',' read -r hostname ip
           do
-            echo "--------------------------------"
+            echo "------------------------------------"
             echo "Processing host: $hostname ($ip)"
 
             echo "Checking SSH connectivity..."
@@ -88,26 +91,37 @@ jobs:
             ssh -o ConnectTimeout=10 \
                 -o StrictHostKeyChecking=no \
                 -i "$PEM_FILE" \
-                "$REMOTE_USER@$ip" "cat /etc/os-release" 2>&1
+                "$REMOTE_USER@$ip" "cat /etc/os-release"
 
-            if [ $? -ne 0 ]; then
-              echo "❌ SSH connection failed for $hostname ($ip)"
+            SSH_STATUS=$?
+
+            if [ $SSH_STATUS -ne 0 ]; then
+              echo "❌ SSH failed for $hostname ($ip)"
               echo "Skipping host..."
               continue
             fi
 
             echo "📦 Copying $SCRIPT_LOCAL..."
+
             scp -o ConnectTimeout=10 \
                 -o StrictHostKeyChecking=no \
                 -i "$PEM_FILE" \
                 "$SCRIPT_LOCAL" \
-                "$REMOTE_USER@$ip:$SCRIPT_REMOTE" 2>&1
+                "$REMOTE_USER@$ip:$SCRIPT_REMOTE"
+
+            SCP_STATUS=$?
+
+            if [ $SCP_STATUS -ne 0 ]; then
+              echo "❌ SCP failed for $hostname ($ip)"
+              continue
+            fi
 
             echo "🚀 Running agent install..."
+
             ssh -o StrictHostKeyChecking=no \
                 -i "$PEM_FILE" \
-                "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE" 2>&1
+                "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE"
 
-            echo "✅ Finished agent steps for $hostname ($ip)"
+            echo "Finished processing $hostname"
 
           done < agent_hosts.txt
