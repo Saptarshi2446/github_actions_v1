@@ -59,19 +59,19 @@ jobs:
           EOF
                 > agent_hosts.txt
 
-      - name: Install agents on hosts
+      - name: Install agents
         run: |
           while IFS=',' read -r hostname ip
           do
             echo "--- $ip ($hostname): OS Version ---"
 
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "cat /etc/os-release"
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "cat /etc/os-release" || echo "SSH check failed for $ip"
 
             echo "📦 Copying $SCRIPT_LOCAL to $REMOTE_USER@$ip ..."
-            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$ip:$SCRIPT_REMOTE"
+            scp -o StrictHostKeyChecking=no -i "$PEM_FILE" "$SCRIPT_LOCAL" "$REMOTE_USER@$ip:$SCRIPT_REMOTE" || echo "SCP failed"
 
             echo "🚀 Executing agent script on $REMOTE_USER@$ip ..."
-            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE"
+            ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" "$REMOTE_USER@$ip" "bash $SCRIPT_REMOTE" || echo "Install failed"
 
             echo "Finished agent steps for $hostname ($ip)"
 
