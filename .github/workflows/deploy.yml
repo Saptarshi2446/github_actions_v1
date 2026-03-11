@@ -22,7 +22,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas requests openpyxl
+          sudo apt update
+          sudo apt install -y python3-pandas python3-openpyxl
 
       - name: Execute bulk onboarding
         run: |
