@@ -178,7 +178,7 @@ jobs:
     needs: setup-agent-csv
 
     env:
-      REMOTE_IPS: ${{ needs.install-agent.outputs.remote_ips }}
+      REMOTE_IPS: ${{ needs.setup-agent-csv.outputs.remote_ips }}
       PEM_FILE: zbx_srv1.pem
       REMOTE_USER: ubuntu
       SCRIPT_LOCAL: zabbix_agent_add.sh
