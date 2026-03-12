@@ -138,7 +138,7 @@ jobs:
 
   #         done
 
-  install-agent:
+  setup-agent-csv:
 
     runs-on: self-hosted
 
@@ -175,7 +175,7 @@ jobs:
   add-agent:
 
     runs-on: self-hosted
-    needs: install-agent
+    needs: setup-agent-csv
 
     env:
       REMOTE_IPS: ${{ needs.install-agent.outputs.remote_ips }}
