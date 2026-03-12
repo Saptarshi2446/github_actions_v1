@@ -1,11 +1,15 @@
 Type,HostGroup,Template,Hostname,IP,Port,SNMP_Type,SNMP_Port,SecurityName,Community
 1,"28,5,78",10001,tf_linux-server010,3.133.150.182,10050,,,,
 1,"28,5,78",10001,tf_linux-server020,172.31.7.43,10050,,,,
-3,5,10001,tf_linux-server03,127.0.0.3,10050,,,,
+1,5,10001,tf_linux-server03,127.0.0.3,10050,,,,
 1,"28,5,78",10001,tf_linux-server01,127.0.0.1,10050,,,,
 1,"28,5,78",10001,tf_linux-server02,127.0.0.1,10050,,,,
 1,5,10001,tf_linux-server03,127.0.0.3,10050,,,,
 4,"28,5",10001,tf_linux-server04,3.133.150.182,10050,,,,
 1,78,10001,tf_linux-server05,3.133.150.182,10050,,,,
-6,"28,",10001,tf_linux-server06,127.0.0.6,10050,,,,
+1,"28,",10001,tf_linux-server06,127.0.0.6,10050,,,,
 1,5,10001,tf_linux-server07,127.0.0.1,10050,,,,
+2,47,10611,tf_switch01,172.31.7.43,,2,161,,public
+2,47,10611,tf_firewall01,3.133.150.182,,2,161,snmpuser,
+2,47,10611,tf_switch02,172.31.7.43,,2,161,,public
+2,47,10611,tf_firewall02,3.133.150.182,,2,161,snmpuser,
