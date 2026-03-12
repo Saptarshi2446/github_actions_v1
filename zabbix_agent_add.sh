@@ -24,9 +24,6 @@ sudo sed -i '/^Hostname=/s/^/#/' $CONF
 sudo sed -i 's/^ListenPort=.*/ListenPort=10050/' $CONF
 sudo sed -i 's/^#*\s*HostMetadata=.*/HostMetadata=linux_github_actions/' "/etc/zabbix/zabbix_agentd.conf"
 
-
-:q
-
 # Restart and enable service
 sudo systemctl enable zabbix-agent
 sudo systemctl restart zabbix-agent
