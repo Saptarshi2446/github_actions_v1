@@ -8,7 +8,7 @@ ip = sys.argv[4]
 port = sys.argv[5]
 
 # === CONFIGURATION ===
-ZABBIX_API_URL = "http://3.148.213.27/zabbix/api_jsonrpc.php"
+ZABBIX_API_URL = "http://3.133.150.182/zabbix/api_jsonrpc.php"
 USERNAME = "Admin"
 PASSWORD = "zabbix"
 # === AUTHENTICATE ===
